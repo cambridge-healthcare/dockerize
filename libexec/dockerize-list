@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# Usage: dockerize list [filter]
+#
+# Summary: Lists all containers, supports filtering
+#
+# Help: Lists all containers (running or not), can apply additional filters
+#
+#   dockerize list
+#   dockerize list Exit 127
+#   dockerize list "ruby-build|ubuntu"
+#
+# Since all arguments are passed to awk regexp, filter combinations are also possible:
+#
+#   dockerize list "ubuntu/ && ! /Exit 0"
+
+filter="$@"
+
+__command="docker ps -a | awk '/$filter/'"
+
+$__exec $__command

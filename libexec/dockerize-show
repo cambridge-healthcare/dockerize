@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# Usage: dockerize show [cid-file|cid] [attribute]
+#
+# Summary: Shows all container attributes (or specific ones)
+#
+# Help: Can be used with a container ID file or container ID, extracts specific attributes
+#
+#   dockerize info a73f5728d97d
+#   dockerize info a73f5728d97d Running
+#   dockerize info redis_server.cid IPAddress
+#
+# Since all arguments are passed to awk regexp, multiple attributes can be extracted
+#
+#   dockerize info redis_server.cid IPAddress Tcp
+
+container_id=$1
+shift
+
+if [ -z "$container_id" ]
+then
+  echo "Expecting container id or container id file as argument"
+  exit 1
+fi
+
+if [ -e "$DOCKER_CIDS_DIR/$container_id" ]
+then
+  cid="$(cat $DOCKER_CIDS_DIR/$container_id)"
+else
+  cid="$(dockerize list $container_id | awk ' NR == 1 { print $1 }')"
+fi
+
+if [ -z "$cid" ]
+then
+  echo "Container with ID $container_id could not be found"
+  exit 1
+fi
+
+__command="docker inspect $cid"
+
+if [ -n "$1" ]
+then
+  for attribute in "$@"
+  do
+    if [ "$attribute" = "Tcp" ]
+    then
+      $__exec "$__command | awk -F'\"' '/$attribute\"/ { getline; print \$2\" \"\$4 }'"
+    else
+      $__exec "$__command | awk -F: '/$attribute\"/ { print \$2 }' | sed 's|[{}\", ]||g'"
+    fi
+  done
+else
+  $__exec $__command
+fi

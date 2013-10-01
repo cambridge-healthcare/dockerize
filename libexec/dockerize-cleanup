@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#
+# Usage: dockerize cleanup [x seconds|hours|days|hours|weeks|months] [filter]
+#
+# Summary: Deletes containers older than a specific time period
+#
+# Help: Claims back some of the disk space used by older Docker containers
+#
+#    dockerize cleanup 1 week
+#
+# Restrict containers to an identifier (eg. IMAGE, COMMAND, STATUS etc.)
+#
+#   dockerize cleanup 1 hours Exit 127
+#   dockerize cleanup 1 hours echo foobar
+
+num="$1"
+shift
+period="$1"
+shift
+filter="$@"
+
+if [ -n "$num" ] && [ -n "$period" ]
+then
+  case "$period" in
+  "minute" | "minutes" )
+    previous_periods="|second"
+    ;;
+  "hour" | "hours" )
+    previous_periods="|second|minute"
+    ;;
+  "day" | "days" )
+    previous_periods="|second|minute|hour"
+    ;;
+  "week" | "weeks" )
+    previous_periods="|second|minute|hour|day"
+    ;;
+  "month" | "months" )
+    previous_periods="|second|minute|hour|day|week"
+    ;;
+  "year" | "years" )
+    previous_periods="|second|minute|hour|day|week|month"
+    ;;
+  esac
+
+  echo "Delete all containers older than $num $period?"
+  select yn in "Yes" "No"; do
+    case $yn in
+    Yes )
+      containers_to_delete="$(docker ps -a | awk 'NR > 1' | awk "/$filter/" | awk '! /[1-'$num'] '${period}${previous_periods}'/ { print $1 }')"
+      num_containers_to_delete="$(echo $containers_to_delete | wc -w)"
+      if [ -n "$containers_to_delete" ]
+      then
+        __command="docker rm $containers_to_delete"
+        $__exec $__command
+        echo "Deleted $num_containers_to_delete containers"
+        exit
+      else
+        message="No containers older than $num $period"
+        [ -n "$filter" ] && message="$message that match '$filter'"
+        echo "$message"
+        exit
+      fi
+      ;;
+    No )
+      echo "Didn't delete any containers"
+      exit
+      ;;
+    esac
+  done
+else
+  echo "First argument must be a number, the second one must be a period (eg. hours, days)"
+  exit 1
+fi

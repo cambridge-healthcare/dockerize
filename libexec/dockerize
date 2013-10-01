@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+set -e
+
+export __exec="eval"
+
+case "$1" in
+"-d" | "--debug" )
+  set -x
+  export __exec="echo"
+  shift
+esac
+
+if [ -z "$(type -p docker)" ]
+then
+  echo "dockerize: cannot find docker binary, did you install it?"
+  exit 1
+fi
+
+DOCKER_CIDS_DIR="/var/run/docker_cids"
+[ ! -d $DOCKER_CIDS_DIR ] && sudo mkdir $DOCKER_CIDS_DIR
+
+resolve_link() {
+  $(type -p greadlink readlink | head -1) "$1"
+}
+
+abs_dirname() {
+  local cwd="$(pwd)"
+  local path="$1"
+
+  while [ -n "$path" ]; do
+    cd "${path%/*}"
+    local name="${path##*/}"
+    path="$(resolve_link "$name" || true)"
+  done
+
+  pwd
+  cd "$cwd"
+}
+
+libexec_path="$(abs_dirname "$0")"
+export _DOCKERIZE_ROOT="$(abs_dirname "$libexec_path")"
+export PATH="${libexec_path}:$PATH"
+
+command="$1"
+case "$command" in
+"" | "-h" | "--help" )
+  exec dockerize-help
+  ;;
+"-v" | "--version" )
+  echo "dockerize v0.1.0"
+  ;;
+* )
+  command_path="$(command -v "dockerize-$command" || true)"
+  if [ ! -x "$command_path" ]; then
+    echo "dockerize: no such command \`$command'" >&2
+    exit 1
+  fi
+
+  shift
+  exec "$command_path" "$@"
+  ;;
+esac
