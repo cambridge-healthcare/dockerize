@@ -26,6 +26,14 @@ then
   echo "Done!"
 fi
 
+DOCKER_GITHUB_REPOS="${DOCKER_GITHUB_REPOS:-/var/lib/docker/github_repositories}"
+if [ ! -d "$DOCKER_GITHUB_REPOS" ]
+then
+  echo "Docker directory for storing github repositories does not exist, creating it now..."
+  $__exec "sudo mkdir $DOCKER_GITHUB_REPOS"
+  echo "Done!"
+fi
+
 resolve_link() {
   $(type -p greadlink readlink | head -1) "$1"
 }
