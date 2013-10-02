@@ -2,7 +2,7 @@
 #
 # Usage: dockerize show [cid-file|cid] [attribute]
 #
-# Summary: Shows all container attributes (or specific ones)
+# Summary: Shows all or specific container attributes
 #
 # Help: Can be used with a container ID file or container ID, extracts specific attributes
 #
