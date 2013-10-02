@@ -43,7 +43,8 @@ then
   esac
 
   echo "Delete all containers older than $num $period?"
-  select yn in "Yes" "No"; do
+  select yn in "Yes" "No"
+  do
     case $yn in
     Yes )
       containers_to_delete="$(docker ps -a | awk 'NR > 1' | awk "/$filter/" | awk '! /[1-'$num'] '${period}${previous_periods}'/ { print $1 }')"
