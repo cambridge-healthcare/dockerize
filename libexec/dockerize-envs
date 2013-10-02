@@ -2,7 +2,7 @@
 #
 # Usage: dockerize envs [ENV_1 ENV_2]
 #
-# Summary: Lists all containers, supports filtering
+# Summary: Converts envs to docker-friendly ones
 #
 # Help: Converts all environment variables to docker-friendly ones
 #
