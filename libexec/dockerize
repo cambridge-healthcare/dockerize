@@ -50,19 +50,27 @@ export PATH="${libexec_path}:$PATH"
 
 command="$1"
 case "$command" in
-"" | "-h" | "--help" )
-  exec dockerize-help
+"" | -h* | --h* )
+
+  $__exec "dockerize-help"
+
   ;;
-"-v" | "--version" )
-  echo "dockerize v0.1.0"
+-v* | --v* )
+
+  $__exec "echo 'dockerize v0.1.0'"
+
   ;;
 * )
+
   command_path="$(command -v "dockerize-$command" || true)"
-  if [ ! -x "$command_path" ]; then
-    echo "Dockerize does not have the \`$command' command" >&2
-    exit 1
-  fi
   shift
-  exec "$command_path" "$@"
+
+  if [ ! -x "$command_path" ]
+  then
+    command_path="$(command -v docker)"
+  fi
+
+  $__exec "$command_path $command $@"
+
   ;;
 esac
