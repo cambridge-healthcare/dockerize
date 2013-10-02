@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+#
+# Usage: dockerize github :github_user/:repository [image_name]
+#
+# Summary: Build images from github repositories
+#
+# Help: Repositories that have a Dockerfile in them will be turned into an image
+#
+#   dockerize github cambridge_healthcare/hi_sinatra-docker hi_sinatra
+#
+# Dockerize adds a few conventions on top of Docker's default build behaviour:
+#
+# * github credentials management (caching or storing)
+# * always clones the github repository
+# * always builds from the local directory (think ADD . /app_name)
+# * enables you to leverage the ADD command to its full potential
+
+if [ -z "$(type -p git)" ]
+then
+  echo "Cannot find git. Is git installed and available in the PATH?"
+  exit 1
+fi
+
+_git_version="$(git --version | awk '{ print $3 }')"
+_git_version_num="${_git_version//./}"
+
+if [ "$_git_version_num" -lt 1790 ]
+then
+  echo "git v1.7.9.0 or newer required"
+  exit 1
+fi
+
+if [ -z "$1" ]
+then
+  echo "Missing github_user/repository argument"
+  exit 1
+fi
+
+# Setting up github credentials caching
+# There are 2 requirements for this:
+#   1. git >= 1.7.9
+#   2. git pull via https
+#
+# More info:
+#   * https://www.kernel.org/pub/software/scm/git/docs/git-credential-store.html
+#   * https://help.github.com/articles/set-up-git
+#
+if [[ ! -e "$HOME/.git-credentials" && ! -e "$HOME/.no_prompting_for_credentials" ]]
+then
+  echo "Should git manage github credentials?"
+  _github_credentials_options=(
+    "Cache credentials for 10 minutes"
+    "Store credentials in plaintext"
+    "No, don't manage credentials"
+  )
+  select answer in "${_github_credentials_options[@]}"
+  do
+    touch "$HOME/.no_prompting_for_credentials"
+
+    case $answer in
+    "${_github_credentials_options[0]}" )
+      git config --global credential.helper cache
+      break
+      ;;
+    "${_github_credentials_options[1]}" )
+      git config --global credential.helper store
+      echo "Storing github credentials in plaintext"
+      read -p "Github username: " github_username
+      read -p "Github password: " github_password
+      echo "https://$github_username:$github_password@github.com" > $HOME/.git-credentials
+      break
+      ;;
+    "${_github_credentials_options[2]}" )
+      break
+      ;;
+    esac
+  done
+fi
+
+DOCKER_GITHUB_REPOS="${DOCKER_GITHUB_REPOS:-/var/lib/docker/github_repositories}"
+if [ ! -d "$DOCKER_GITHUB_REPOS" ]
+then
+  echo "Docker directory for storing github repositories does not exist, creating it now..."
+  $__exec "sudo mkdir $DOCKER_GITHUB_REPOS"
+  echo "Done!"
+fi
+
+_github_repo="$1"
+shift
+_image_name="${1:-${_github_repo/*\//}}"
+_cloned_repository="$DOCKER_GITHUB_REPOS/$_image_name"
+
+if [ ! -e "$_cloned_repository" ]
+then
+  $__exec "git clone https://github.com/${_github_repo}.git $_cloned_repository"
+else
+  $__exec "cd $_cloned_repository && git fetch && git reset --hard origin/master"
+fi
+
+cd $_cloned_repository
+
+if [ ! -e Dockerfile ]
+then
+  echo "This repository does not contain a Dockerfile, cannot build image"
+  exit 1
+fi
+
+$__exec "docker build -no-cache -rm -t $_image_name $_cloned_repository"
