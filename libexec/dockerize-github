@@ -21,10 +21,10 @@ then
   exit 1
 fi
 
-_git_version="$(git --version | awk '{ print $3 }')"
-_git_version_num="${_git_version//./}"
+git_version="$(git --version | awk '{ print $3 }')"
+git_version_num="${git_version//./}"
 
-if [ "$_git_version_num" -lt 1790 ]
+if [ "$git_version_num" -lt 1790 ]
 then
   echo "git v1.7.9.0 or newer required"
   exit 1
@@ -42,21 +42,21 @@ fi
 if [[ ! -e "$HOME/.git-credentials" && ! -e "$HOME/.no_prompting_for_credentials" ]]
 then
   echo "Should git manage github credentials?"
-  _github_credentials_options=(
+  github_credentials_options=(
     "Cache credentials for 10 minutes"
     "Store credentials in plaintext"
     "No, don't manage credentials"
   )
-  select answer in "${_github_credentials_options[@]}"
+  select answer in "${github_credentials_options[@]}"
   do
     touch "$HOME/.no_prompting_for_credentials"
 
     case $answer in
-    "${_github_credentials_options[0]}" )
+    "${github_credentials_options[0]}" )
       git config --global credential.helper cache
       break
       ;;
-    "${_github_credentials_options[1]}" )
+    "${github_credentials_options[1]}" )
       git config --global credential.helper store
       echo "Storing github credentials in plaintext"
       read -p "Github username: " github_username
@@ -64,7 +64,7 @@ then
       echo "https://$github_username:$github_password@github.com" > $HOME/.git-credentials
       break
       ;;
-    "${_github_credentials_options[2]}" )
+    "${github_credentials_options[2]}" )
       break
       ;;
     esac
@@ -85,33 +85,33 @@ then
   exit 1
 fi
 
-_github_repo_name_and_branch=(${1//:/ })
-_github_repo="${_github_repo_name_and_branch[0]}"
-_github_repo_branch="${_github_repo_name_and_branch[1]:-master}"
+github_repo_name_and_branch=(${1//:/ })
+github_repo="${github_repo_name_and_branch[0]}"
+github_repo_branch="${github_repo_name_and_branch[1]:-master}"
 shift
-_image_name="${1:-${_github_repo/*\//}}"
-_cloned_repository="$DOCKER_GITHUB_REPOS/$_image_name"
+image_name="${1:-${github_repo/*\//}}"
+cloned_repository="$DOCKER_GITHUB_REPOS/$image_name"
 
-if [ ! -e "$_cloned_repository" ]
+if [ ! -e "$cloned_repository" ]
 then
-  $__exec "git clone https://github.com/${_github_repo}.git $_cloned_repository"
-  $__exec "cd $_cloned_repository"
+  $__exec "git clone https://github.com/${github_repo}.git $cloned_repository"
+  $__exec "cd $cloned_repository"
 else
-  $__exec "cd $_cloned_repository && git fetch"
+  $__exec "cd $cloned_repository && git fetch"
 fi
 
-$__exec "git checkout -f origin/$_github_repo_branch"
+$__exec "git checkout -f origin/$github_repo_branch"
 
 if [ $? -ne 0 ]
 then
-  echo "Cannot switch to origin/$_github_repo_branch, does the branch exist?"
+  echo "Cannot switch to origin/$github_repo_branch, does the branch exist?"
   exit 1
 fi
 
-if [[ $PWD == $_cloned_repository && ! -e Dockerfile ]]
+if [[ $PWD == $cloned_repository && ! -e Dockerfile ]]
 then
   echo "This repository does not contain a Dockerfile, cannot build Docker image"
   exit 1
 fi
 
-$__exec "docker build -no-cache -rm -t $_image_name:$_github_repo_branch ."
+$__exec "docker build -no-cache -rm -t $image_name:$github_repo_branch ."
