@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Usage: dockerize boot image[:tag]
+#
+# Summary: Runs docker container from image
+#
+# Help: Can run containers from a pre-built image, or will build one from github on-the-fly
+#
+#   dockerize boot hi_sinatra
+#   dockerize boot cambridge-healthcare/hi_sinatra-docker hi_sinatra
+#
+# A directory with the image name must exist in $DOCKER_GITHUB_REPOS.
+
+if [ -z "$1" ]
+then
+  echo "Must specify an image name or github user/repository"
+  exit 1
+fi
+
+image_name_and_tag=(${1//:/ })
+image_name="${image_name_and_tag[0]}"
+image_tag="${image_name_and_tag[1]}"
+shift
