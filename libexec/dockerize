@@ -18,11 +18,12 @@ then
   exit 1
 fi
 
-DOCKER_CIDS_DIR="/var/run/docker_cids"
-if [ ! -d $DOCKER_CIDS_DIR ]
+DOCKER_CIDS_DIR="${DOCKER_CIDS_DIR:-/var/run/docker_cids}"
+if [ ! -d "$DOCKER_CIDS_DIR" ]
 then
   echo "Docker directory for storing container IDs does not exist, creating it now..."
   $__exec "sudo mkdir $DOCKER_CIDS_DIR"
+  echo "Done!"
 fi
 
 resolve_link() {
