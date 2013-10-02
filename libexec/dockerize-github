@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Usage: dockerize github :github_user/:repository [image_name]
+# Usage: dockerize github :github_user/:repository[:branch] [image_name]
 #
 # Summary: Build images from github repositories
 #
@@ -27,12 +27,6 @@ _git_version_num="${_git_version//./}"
 if [ "$_git_version_num" -lt 1790 ]
 then
   echo "git v1.7.9.0 or newer required"
-  exit 1
-fi
-
-if [ -z "$1" ]
-then
-  echo "Missing github_user/repository argument"
   exit 1
 fi
 
@@ -85,7 +79,15 @@ then
   echo "Done!"
 fi
 
-_github_repo="$1"
+if [ -z "$1" ]
+then
+  echo "Missing github_user/repository argument"
+  exit 1
+fi
+
+_github_repo_name_and_branch=(${1//:/ })
+_github_repo="${_github_repo_name_and_branch[0]}"
+_github_repo_branch="${_github_repo_name_and_branch[1]:-master}"
 shift
 _image_name="${1:-${_github_repo/*\//}}"
 _cloned_repository="$DOCKER_GITHUB_REPOS/$_image_name"
@@ -93,16 +95,23 @@ _cloned_repository="$DOCKER_GITHUB_REPOS/$_image_name"
 if [ ! -e "$_cloned_repository" ]
 then
   $__exec "git clone https://github.com/${_github_repo}.git $_cloned_repository"
+  $__exec "cd $_cloned_repository"
 else
-  $__exec "cd $_cloned_repository && git fetch && git reset --hard origin/master"
+  $__exec "cd $_cloned_repository && git fetch"
 fi
 
-cd $_cloned_repository
+$__exec "git checkout -f origin/$_github_repo_branch"
 
-if [ ! -e Dockerfile ]
+if [ $? -ne 0 ]
 then
-  echo "This repository does not contain a Dockerfile, cannot build image"
+  echo "Cannot switch to origin/$_github_repo_branch, does the branch exist?"
   exit 1
 fi
 
-$__exec "docker build -no-cache -rm -t $_image_name $_cloned_repository"
+if [[ $PWD == $_cloned_repository && ! -e Dockerfile ]]
+then
+  echo "This repository does not contain a Dockerfile, cannot build Docker image"
+  exit 1
+fi
+
+$__exec "docker build -no-cache -rm -t $_image_name:$_github_repo_branch ."
