@@ -5,7 +5,7 @@ export __exec="eval"
 
 # Turn on debug mode, all commands are just dry runs, no action will be taken
 case "$1" in
--d* | --d* )
+-d | --d* )
   echo "Running in debug mode, no commands will be executed"
   set -x
   export __exec="echo"
@@ -50,12 +50,12 @@ export PATH="${libexec_path}:$PATH"
 
 command="$1"
 case "$command" in
-"" | -h* | --h* )
+"" | -h | --h* )
 
   $__exec "dockerize-help"
 
   ;;
--v* | --v* )
+-v | --v* )
 
   $__exec "echo 'dockerize v0.1.0'"
 
