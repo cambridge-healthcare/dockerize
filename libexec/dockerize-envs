@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+#
+# Usage: dockerize envs [ENV_1 ENV_2]
+#
+# Summary: Lists all containers, supports filtering
+#
+# Help: Converts all environment variables to docker-friendly ones
+#
+#   export TCP_PORT=9292
+#   export REDIS_URI="redis://172.0.0.13:6379"
+#
+#   dockerize envs TCP_PORT REDIS_URI
+#   -e TCP_PORT=9292 -e REDIS_URI="redis://172.0.0.13:6379"
+
+_envs="$@"
+_docker_envs=()
+
+for _env in ${_envs[@]}
+do
+  _docker_envs+=("-e $_env=${!_env}")
+done
+
+__command="echo \"\${_docker_envs[@]}\""
+
+$__exec $__command
