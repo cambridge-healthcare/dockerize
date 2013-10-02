@@ -20,17 +20,17 @@ then
   exit 1
 fi
 
-_envs="$@"
-_docker_envs=()
+envs="$@"
+docker_envs=()
 
-for _env in ${_envs[@]}
+for _env in ${envs[@]}
 do
   if [ -n "${!_env}" ]
   then
-    _docker_envs+=("-e $_env=${!_env}")
+    docker_envs+=("-e $_env=${!_env}")
   fi
 done
 
-__command="echo \"\${_docker_envs[@]}\""
+__command="echo \"\${docker_envs[@]}\""
 
 $__exec $__command
