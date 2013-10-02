@@ -67,10 +67,10 @@ case "$command" in
 
   if [ ! -x "$command_path" ]
   then
-    command_path="$(command -v docker)"
+    command_path="$(command -v docker) $command"
   fi
 
-  $__exec "$command_path $command $@"
+  $__exec "$command_path $@"
 
   ;;
 esac
