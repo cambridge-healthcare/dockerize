@@ -78,7 +78,7 @@ then
       $__exec $__command
     fi
 
-    _container_image_upcase=$(echo ${_container_image/.*\//} | tr '[a-z]' '[A-Z]')
+    _container_image_upcase=$(echo ${_container_image/*\//} | tr '[a-z]' '[A-Z]')
     # expose hostnames for all dependent containers as envs
     envs="$envs -e ${_container_image_upcase}_HOST=$(dockerize show $_container_cidfile IPAddress)"
   done
