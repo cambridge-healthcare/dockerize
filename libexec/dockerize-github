@@ -39,7 +39,7 @@ fi
 #   * https://www.kernel.org/pub/software/scm/git/docs/git-credential-store.html
 #   * https://help.github.com/articles/set-up-git
 #
-if [[ ! -e "$HOME/.git-credentials" && ! -e "$HOME/.no_prompting_for_credentials" ]]
+if [[ ! -e "$HOME/.git-credentials" && ! -e "$HOME/.no_prompting_for_git_credentials" ]]
 then
   echo "Should git manage github credentials?"
   github_credentials_options=(
@@ -49,7 +49,7 @@ then
   )
   select answer in "${github_credentials_options[@]}"
   do
-    touch "$HOME/.no_prompting_for_credentials"
+    touch "$HOME/.no_prompting_for_git_credentials"
 
     case $answer in
     "${github_credentials_options[0]}" )
