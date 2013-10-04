@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Usage: dockerize github user/repository[:branch] [image_name]
+# Usage: dockerize github user/repository[:branch] [docker_image]
 #
 # Summary: Build images from github repositories
 #
@@ -77,13 +77,13 @@ then
   exit 1
 fi
 
-github_repo_name_and_branch=(${1//:/ })
+github_repo_name_and_branch=(${1/:/ })
 github_repo="${github_repo_name_and_branch[0]}"
 github_repo_branch="${github_repo_name_and_branch[1]:-master}"
 shift
 
-image_name="${1:-${github_repo/*\//}}"
-cloned_repository="$DOCKER_GITHUB_REPOS/$image_name"
+docker_image="${1:-${github_repo/*\//}}"
+cloned_repository="$DOCKER_GITHUB_REPOS/$docker_image"
 
 if [ ! -e "$cloned_repository" ]
 then
@@ -94,12 +94,14 @@ else
 fi
 
 $__exec "git checkout -f origin/$github_repo_branch"
-
 if [ $? -ne 0 ]
 then
-  echo "Cannot switch to origin/$github_repo_branch, does the branch exist?"
+  echo "Branch origin/$github_repo_branch does not exist"
   exit 1
 fi
+
+commit_sha="$($__exec git rev-parse --short HEAD)"
+docker_image_tag="${github_repo_branch}.${commit_sha}"
 
 if [[ $PWD == $cloned_repository && ! -e Dockerfile ]]
 then
@@ -107,4 +109,16 @@ then
   exit 1
 fi
 
-$__exec "docker build -no-cache -rm -t $image_name:$github_repo_branch ."
+if [[ -z $(dockerize images | grep $docker_image | grep " base ") ]]
+then
+  $__exec "docker build -no-cache -rm -t $docker_image:base ."
+fi
+
+if [[ -n $(dockerize images | grep $docker_image | grep $docker_image_tag) ]]
+then
+  echo "Container $docker_image:$docker_image_tag already built"
+else
+  $__exec "sed 's|FROM .*|FROM $docker_image:base|g' Dockerfile > Dockerfile.new"
+  $__exec "mv Dockerfile Dockerfile.bak && mv Dockerfile.new Dockerfile"
+  $__exec "docker build -no-cache -rm -t $docker_image:$docker_image_tag ."
+fi
