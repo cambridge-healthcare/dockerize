@@ -64,7 +64,7 @@ then
     _container_image_tag="${_container_image_tag_and_port[1]:-latest}"
     _container_image_port="${_container_image_tag_and_port[2]}"
     # Always strip the SHA, we only want 1 container dependency per branch
-    _container_cidfile="$DOCKER_CIDS_DIR/${docker_image}.${docker_image_tag/\.*/}.${_container_image}.cid"
+    _container_cidfile="$DOCKER_CIDS_DIR/${docker_image}.${docker_image_tag/\.*/}.${_container_image/\//.}.cid"
 
     __command="dockerize run -cidfile $_container_cidfile -d"
     [[ -n $_container_image_port ]] && __command="$__command -p $_container_image_port"
@@ -72,13 +72,13 @@ then
 
     if [[ -e $_container_cidfile && -n $(dockerize ps | grep $(cat $_container_cidfile)) ]]
     then
-      echo "Container ${docker_image}.${docker_image_tag}.${_container_image} already running"
+      echo "Container ${docker_image}.${docker_image_tag}.${_container_image/\//.} already running"
     else
       $__exec "rm -f $_container_cidfile"
       $__exec $__command
     fi
 
-    _container_image_upcase=$(echo $_container_image | tr '[a-z]' '[A-Z]')
+    _container_image_upcase=$(echo ${_container_image/.*\//} | tr '[a-z]' '[A-Z]')
     # expose hostnames for all dependent containers as envs
     envs="$envs -e ${_container_image_upcase}_HOST=$(dockerize show $_container_cidfile IPAddress)"
   done
