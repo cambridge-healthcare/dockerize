@@ -23,7 +23,10 @@ then
   exit 1
 fi
 
-if [ -e "$DOCKER_CIDS_DIR/$container_id" ]
+if [ -e "$container_id" ]
+then
+  cid="$(cat $container_id)"
+elif [ -e "$DOCKER_CIDS_DIR/$container_id" ]
 then
   cid="$(cat $DOCKER_CIDS_DIR/$container_id)"
 else
