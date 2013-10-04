@@ -18,7 +18,7 @@ then
   exit 1
 fi
 
-DOCKER_CIDS_DIR="${DOCKER_CIDS_DIR:-/var/run/docker_cids}"
+export DOCKER_CIDS_DIR="${DOCKER_CIDS_DIR:-/var/run/docker_cids}"
 if [ ! -d "$DOCKER_CIDS_DIR" ]
 then
   echo "Docker directory for storing container IDs does not exist, creating it now..."
@@ -26,7 +26,7 @@ then
   echo "Done!"
 fi
 
-DOCKER_GITHUB_REPOS="${DOCKER_GITHUB_REPOS:-/var/lib/docker/github_repositories}"
+export DOCKER_GITHUB_REPOS="${DOCKER_GITHUB_REPOS:-/var/lib/docker/github_repositories}"
 if [ ! -d "$DOCKER_GITHUB_REPOS" ]
 then
   echo "Docker directory for storing github repositories does not exist, creating it now..."
@@ -78,7 +78,7 @@ case "$command" in
     command_path="$(command -v docker) $command"
   fi
 
-  $__exec "$command_path $@"
+  eval "$command_path $@"
 
   ;;
 esac
