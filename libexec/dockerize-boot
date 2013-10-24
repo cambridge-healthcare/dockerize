@@ -2,7 +2,7 @@
 #
 # Usage: dockerize boot image[:tag]
 #
-# Summary: Runs Docker container from image, builds base image if necessary
+# Summary: Runs Docker container from image, builds master image if necessary
 #
 # Help: Run containers from a pre-built Docker image, build one on-the-fly
 #
@@ -48,10 +48,9 @@ fi
 
 if [[ -e .dockerize.envs ]]
 then
-  # Create single line from .dockerize.envs file
+  # Extract ENVs from .dockerize.envs
   envs="$(dockerize envs $(cat .dockerize.envs | tr "\n" " "))"
 fi
-
 
 if [[ -e .dockerize.containers ]]
 then

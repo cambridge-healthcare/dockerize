@@ -4,13 +4,13 @@
 #
 # Summary: Build images from github repositories
 #
-# Help: Repositories that have a Dockerfile in them will be turned into an image
+# Help: A Docker image will be built from repositories that contain a Dockerfile
 #
 #   dockerize github cambridge-healthcare/hi_sinatra-docker hi_sinatra
 #
-# Dockerize adds a few conventions on top of Docker's default build behaviour:
+# Dockerize adds a few conventions on top of Docker's default build command:
 #
-# * github credentials management (caching or storing)
+# * github credentials management (caches or stores)
 # * always clones the github repository
 # * always builds from the local directory (think ADD . /app_name)
 # * enables you to leverage the ADD command to its full potential
@@ -43,9 +43,9 @@ if [[ ! -e "$HOME/.git-credentials" && ! -e "$HOME/.no_prompting_for_git_credent
 then
   echo "Should git manage github credentials?"
   github_credentials_options=(
+    "No, don't manage credentials"
     "Cache credentials for 10 minutes"
     "Store credentials in plaintext"
-    "No, don't manage credentials"
   )
   select answer in "${github_credentials_options[@]}"
   do
@@ -53,18 +53,18 @@ then
 
     case $answer in
     "${github_credentials_options[0]}" )
-      git config --global credential.helper cache
       break
       ;;
     "${github_credentials_options[1]}" )
+      git config --global credential.helper cache
+      break
+      ;;
+    "${github_credentials_options[2]}" )
       git config --global credential.helper store
       echo "Storing github credentials in plaintext"
       read -p "Github username: " github_username
       read -p "Github password: " github_password
       echo "https://$github_username:$github_password@github.com" > $HOME/.git-credentials
-      break
-      ;;
-    "${github_credentials_options[2]}" )
       break
       ;;
     esac
@@ -109,16 +109,16 @@ then
   exit 1
 fi
 
-if [[ -z $(dockerize images | grep $docker_image | grep " base ") ]]
+if [[ -z $(dockerize images | grep $docker_image | grep " master ") ]]
 then
-  $__exec "docker build -no-cache -rm -t $docker_image:base ."
+  $__exec "docker build -no-cache -rm -t $docker_image:master ."
 fi
 
 if [[ -n $(dockerize images | grep $docker_image | grep $docker_image_tag) ]]
 then
   echo "Container $docker_image:$docker_image_tag already built"
 else
-  $__exec "sed 's|FROM .*|FROM $docker_image:base|g' Dockerfile > Dockerfile.new"
+  $__exec "sed 's|FROM .*|FROM $docker_image:master|g' Dockerfile > Dockerfile.new"
   $__exec "mv Dockerfile Dockerfile.bak && mv Dockerfile.new Dockerfile"
   $__exec "docker build -no-cache -rm -t $docker_image:$docker_image_tag ."
 fi
