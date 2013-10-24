@@ -6,13 +6,13 @@
 #
 # Help: Can be used with a container ID file or container ID, extracts specific attributes
 #
-#   dockerize info a73f5728d97d
-#   dockerize info a73f5728d97d Running
-#   dockerize info redis_server.cid IPAddress
+#   dockerize show a73f5728d97d
+#   dockerize show a73f5728d97d Running
+#   dockerize show redis_server.cid IPAddress
 #
 # Since all arguments are passed to awk regexp, multiple attributes can be extracted
 #
-#   dockerize info redis_server.cid IPAddress Tcp
+#   dockerize show redis_server.cid IPAddress Tcp
 
 container_id=$1
 shift
