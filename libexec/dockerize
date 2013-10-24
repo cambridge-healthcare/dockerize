@@ -18,16 +18,16 @@ then
   exit 1
 fi
 
-export DOCKER_CIDS_DIR="${DOCKER_CIDS_DIR:-/var/run/docker_cids}"
+export DOCKER_CIDS_DIR="${DOCKER_CIDS_DIR:-$HOME/.docker/cids}"
 if [ ! -d "$DOCKER_CIDS_DIR" ]
 then
-  $__exec "mkdir $DOCKER_CIDS_DIR"
+  $__exec "mkdir -p $DOCKER_CIDS_DIR"
 fi
 
-export DOCKER_GITHUB_REPOS="${DOCKER_GITHUB_REPOS:-/var/lib/docker/github_repositories}"
+export DOCKER_GITHUB_REPOS="${DOCKER_GITHUB_REPOS:-$HOME/.docker/github_repositories}"
 if [ ! -d "$DOCKER_GITHUB_REPOS" ]
 then
-  $__exec "mkdir $DOCKER_GITHUB_REPOS"
+  $__exec "mkdir -p $DOCKER_GITHUB_REPOS"
 fi
 
 resolve_link() {
