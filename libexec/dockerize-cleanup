@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Usage: dockerize cleanup [x seconds|hours|days|hours|weeks|months] [filter]
+# Usage: dockerize cleanup x seconds|hours|days|hours|weeks|months [filter]
 #
 # Summary: Deletes containers older than a specific time period, supports filtering
 #
@@ -10,8 +10,11 @@
 #
 # Restrict containers to an identifier (eg. IMAGE, COMMAND, STATUS etc.)
 #
-#   dockerize cleanup 1 hours Exit 127
-#   dockerize cleanup 1 hours echo foobar
+# Delete all containers older than 1 hour with "Exit 127" exit status:
+#   dockerize cleanup 1 hour Exit 127
+#
+# Delete all containers older than 7 days matching "echo foobar" command:
+#   dockerize cleanup 7 days echo foobar
 
 num="$1"
 shift
