@@ -11,6 +11,8 @@
 #
 # A directory with the image name must exist in $DOCKER_GITHUB_REPOS.
 
+set -e
+
 if [ -z "$1" ]
 then
   echo "Must specify an image name or github user/repository"
@@ -65,7 +67,7 @@ then
     # Always strip the SHA, we only want 1 container dependency per branch
     _container_cidfile="$DOCKER_CIDS_DIR/${docker_image}.${docker_image_tag/\.*/}.${_container_image/\//.}.cid"
 
-    __command="dockerize run -cidfile $_container_cidfile -d"
+    __command="dockerize run -cidfile $_container_cidfile $envs -d"
     [[ -n $_container_image_port ]] && __command="$__command -p $_container_image_port"
     __command="$__command $_container_image:$_container_image_tag"
 
