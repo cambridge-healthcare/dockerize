@@ -1,4 +1,4 @@
-### v0.2.0 - 2013/11
+## v0.2.0 - 2013/11
 
 Now that we can bring up Docker containers that depend on other
 containers, we need to add an extra, 3rd level:
@@ -29,7 +29,7 @@ proxy (nginx, haproxy etc.) <- 3rd level container
 * `boot` no longer checks for envs or containers if not dealing with a
   GitHub repository as there is no dir to cd into.
 
-### v0.1.0 - 2013/10
+## v0.1.0 - 2013/10
 
 Introducing support for Docker containers that depend on other
 containers such as a Ruby app needing a Redis and a PostgreSQL server.
