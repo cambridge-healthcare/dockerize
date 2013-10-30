@@ -2,7 +2,7 @@
 #
 # Usage: dockerize cleanup x seconds|hours|days|hours|weeks|months [filter]
 #
-# Summary: Deletes containers older than a specific time period, supports filtering
+# Summary: Delete containers older than a specific time period, supports filtering
 #
 # Help: Claims back some of the disk space used by older Docker containers
 #

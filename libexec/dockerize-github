@@ -2,7 +2,7 @@
 #
 # Usage: dockerize github user/repository[:branch] [docker_image]
 #
-# Summary: Build images from github repositories
+# Summary: Build Docker image from GitHub repository
 #
 # Help: A Docker image will be built from repositories that contain a Dockerfile
 #

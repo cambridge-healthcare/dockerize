@@ -2,9 +2,9 @@
 #
 # Usage: dockerize boot image[:tag]
 #
-# Summary: Runs Docker container from image, builds master image if necessary
+# Summary: Start Docker container from image, supports multi-container orchestration
 #
-# Help: Run containers from a pre-built Docker image, build one on-the-fly
+# Help: Start Docker container from a pre-built Docker image, build one if necessary
 #
 #   dockerize boot hi_sinatra:v2
 #   dockerize boot cambridge-healthcare/hi_sinatra-docker hi_sinatra
@@ -26,7 +26,7 @@ shift
 docker_image="${docker_image_and_tag[0]}"
 docker_image_tag="${docker_image_and_tag[1]:-latest}"
 
-# If docker_image includes a / then we assume that we're dealing with a github repository
+# If docker_image includes a / then we assume that we're dealing with a GitHub repository
 if [[ $docker_image =~ "/" ]]
 then
   # Clone and build if necessary
