@@ -1,19 +1,19 @@
 ### v0.2.0 - 2013/11
 
 Now that we can bring up Docker containers that depend on other
-containers, we need to add an extra level. Imagine the following:
+containers, we need to add an extra, 3rd level:
 
 <pre>
-nginx
+proxy (nginx, haproxy etc.) <- 3rd level container
 |
-|- ruby_app_1
+|- ruby_app_1               <- 2nd level container
 |  |
-|  |- redis_server_1
-|  |- postgresql_server_1
+|  |- redis_server_1        <- 1st level container
+|  |- postgresql_server_1   <- 1st level container
 |
-|- ruby_app_2
+|- ruby_app_2               <- 2nd level container
    |
-   |- redis_server_2
+   |- redis_server_2        <- 1st level container
 </pre>
 
 #### FEATURES
