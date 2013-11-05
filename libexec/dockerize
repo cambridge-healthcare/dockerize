@@ -18,6 +18,14 @@ then
   exit 1
 fi
 
+docker_version="$(dpkg -l lxc-docker | awk '/ii/ { print $3 }')"
+docker_version_num="${docker_version//./}"
+if [[ $docker_version_num < 065 ]]
+then
+  echo "docker v0.6.5 or newer required"
+  exit 1
+fi
+
 export DOCKER_CIDS_DIR="${DOCKER_CIDS_DIR:-$HOME/.docker/cids}"
 if [ ! -d "$DOCKER_CIDS_DIR" ]
 then
