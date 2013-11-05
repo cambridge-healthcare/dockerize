@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Usage: dockerize github user/repository[:branch] [docker_image]
+# Usage: dockerize github user/repository[:branch]
 #
 # Summary: Build Docker image from GitHub repository
 #
@@ -82,7 +82,7 @@ github_repo="${github_repo_name_and_branch[0]}"
 github_repo_branch="${github_repo_name_and_branch[1]:-master}"
 shift
 
-docker_image="${1:-${github_repo/*\//}}"
+docker_image="${github_repo/*\//}"
 cloned_repository="$DOCKER_GITHUB_REPOS/$docker_image"
 
 if [ ! -e "$cloned_repository" ]

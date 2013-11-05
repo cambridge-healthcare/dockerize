@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Usage: dockerize boot image[:tag]
+# Usage: dockerize boot image[:tag] [run arguments]
 #
 # Summary: Start Docker container from image, supports multi-container orchestration
 #
 # Help: Start Docker container from a pre-built Docker image, build one if necessary
 #
 #   dockerize boot hi_sinatra:v2
-#   dockerize boot cambridge-healthcare/hi_sinatra-docker hi_sinatra
+#   dockerize boot cambridge-healthcare/hi_sinatra-docker
 #
 # A directory with the image name must exist in $DOCKER_GITHUB_REPOS.
 
@@ -22,9 +22,11 @@ fi
 args="$@"
 
 docker_image_and_tag=(${1/:/ })
-shift
 docker_image="${docker_image_and_tag[0]}"
 docker_image_tag="${docker_image_and_tag[1]:-latest}"
+shift
+
+run_args="$@"
 
 # If docker_image includes a / then we assume that we're dealing with a GitHub repository
 if [[ $docker_image =~ "/" ]]
@@ -33,7 +35,7 @@ then
   $__exec "dockerize github $args"
 
   github_user_and_repo=(${docker_image/\// })
-  docker_image="${1:-${github_user_and_repo[1]}}"
+  docker_image="${github_user_and_repo[1]}"
   docker_image_tag="${docker_image_and_tag[1]:-master}"
   cloned_repository="$DOCKER_GITHUB_REPOS/$docker_image"
   $__exec "cd $cloned_repository"
@@ -91,5 +93,5 @@ then
   echo "Container ${docker_image}.${docker_image_tag} already running"
 else
   $__exec "rm -f $cidfile"
-  $__exec "dockerize run -cidfile $cidfile $envs -d $docker_image:$docker_image_tag"
+  $__exec "dockerize run -cidfile $cidfile $envs -d $run_args $docker_image:$docker_image_tag"
 fi
