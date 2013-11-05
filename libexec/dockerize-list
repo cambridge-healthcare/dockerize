@@ -2,9 +2,9 @@
 #
 # Usage: dockerize list [filter]
 #
-# Summary: Lists all containers, supports filtering
+# Summary: List all containers, supports filtering
 #
-# Help: Lists all containers (running or not), can apply additional filters
+# Help: List all containers (running or not), supports filtering
 #
 #   dockerize list
 #   dockerize list Exit 127

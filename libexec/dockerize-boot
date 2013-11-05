@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Usage: dockerize boot image[:tag]
+# Usage: dockerize boot image[:tag] [run arguments]
 #
-# Summary: Runs Docker container from image, builds master image if necessary
+# Summary: Start Docker container from image, supports multi-container orchestration
 #
-# Help: Run containers from a pre-built Docker image, build one on-the-fly
+# Help: Start Docker container from a pre-built Docker image, build one if necessary
 #
 #   dockerize boot hi_sinatra:v2
-#   dockerize boot cambridge-healthcare/hi_sinatra-docker hi_sinatra
+#   dockerize boot cambridge-healthcare/hi_sinatra-docker
 #
 # A directory with the image name must exist in $DOCKER_GITHUB_REPOS.
 
@@ -22,18 +22,20 @@ fi
 args="$@"
 
 docker_image_and_tag=(${1/:/ })
-shift
 docker_image="${docker_image_and_tag[0]}"
 docker_image_tag="${docker_image_and_tag[1]:-latest}"
+shift
 
-# If docker_image includes a / then we assume that we're dealing with a github repository
+run_args="$@"
+
+# If docker_image includes a / then we assume that we're dealing with a GitHub repository
 if [[ $docker_image =~ "/" ]]
 then
   # Clone and build if necessary
   $__exec "dockerize github $args"
 
   github_user_and_repo=(${docker_image/\// })
-  docker_image="${1:-${github_user_and_repo[1]}}"
+  docker_image="${github_user_and_repo[1]}"
   docker_image_tag="${docker_image_and_tag[1]:-master}"
   cloned_repository="$DOCKER_GITHUB_REPOS/$docker_image"
   $__exec "cd $cloned_repository"
@@ -46,43 +48,43 @@ then
     echo "Container $docker_image:$docker_image_tag already running"
     exit 0
   fi
-fi
 
-if [[ -e .dockerize.envs ]]
-then
-  # Extract ENVs from .dockerize.envs
-  envs="$(dockerize envs $(cat .dockerize.envs | tr "\n" " "))"
-fi
+  if [[ -e .docker.envs ]]
+  then
+    # Extract ENVs from .dockerize.envs
+    envs="$(dockerize envs $(cat .docker.envs | tr "\n" " "))"
+  fi
 
-if [[ -e .dockerize.containers ]]
-then
-  containers="$(cat .dockerize.containers || '')"
+  if [[ -e .docker.containers ]]
+  then
+    containers="$(cat .docker.containers || '')"
 
-  for _container in ${containers[@]}
-  do
-    _container_image_tag_and_port=(${_container//:/ })
-    _container_image="${_container_image_tag_and_port[0]}"
-    _container_image_tag="${_container_image_tag_and_port[1]:-latest}"
-    _container_image_port="${_container_image_tag_and_port[2]}"
-    # Always strip the SHA, we only want 1 container dependency per branch
-    _container_cidfile="$DOCKER_CIDS_DIR/${docker_image}.${docker_image_tag/\.*/}.${_container_image/\//.}.cid"
+    for _container in ${containers[@]}
+    do
+      _container_image_tag_and_port=(${_container//:/ })
+      _container_image="${_container_image_tag_and_port[0]}"
+      _container_image_tag="${_container_image_tag_and_port[1]:-latest}"
+      _container_image_port="${_container_image_tag_and_port[2]}"
+      # Always strip the SHA, we only want 1 container dependency per branch
+      _container_cidfile="$DOCKER_CIDS_DIR/${docker_image}.${docker_image_tag/\.*/}.${_container_image/\//.}.cid"
 
-    __command="dockerize run -cidfile $_container_cidfile $envs -d"
-    [[ -n $_container_image_port ]] && __command="$__command -p $_container_image_port"
-    __command="$__command $_container_image:$_container_image_tag"
+      __command="dockerize run -cidfile $_container_cidfile $envs -d"
+      [[ -n $_container_image_port ]] && __command="$__command -p $_container_image_port"
+      __command="$__command $_container_image:$_container_image_tag"
 
-    if [[ -e $_container_cidfile && -n $(dockerize ps | grep $(cat $_container_cidfile)) ]]
-    then
-      echo "Container ${docker_image}.${docker_image_tag}.${_container_image/\//.} already running"
-    else
-      $__exec "rm -f $_container_cidfile"
-      $__exec $__command
-    fi
+      if [[ -e $_container_cidfile && -n $(dockerize ps | grep $(cat $_container_cidfile)) ]]
+      then
+        echo "Container ${docker_image}.${docker_image_tag}.${_container_image/\//.} already running"
+      else
+        $__exec "rm -f $_container_cidfile"
+        $__exec $__command
+      fi
 
-    _container_image_upcase=$(echo ${_container_image/*\//} | tr '[a-z]' '[A-Z]')
-    # expose hostnames for all dependent containers as envs
-    envs="$envs -e ${_container_image_upcase}_HOST=$(dockerize show $_container_cidfile IPAddress)"
-  done
+      _container_image_upcase=$(echo ${_container_image/*\//} | tr '[a-z]' '[A-Z]')
+      # expose hostnames for all dependent containers as envs
+      envs="$envs -e ${_container_image_upcase}_HOST=$(dockerize show $_container_cidfile IPAddress)"
+    done
+  fi
 fi
 
 cidfile="$DOCKER_CIDS_DIR/${docker_image}.${docker_image_tag}.cid"
@@ -91,5 +93,5 @@ then
   echo "Container ${docker_image}.${docker_image_tag} already running"
 else
   $__exec "rm -f $cidfile"
-  $__exec "dockerize run -cidfile $cidfile $envs -d $docker_image:$docker_image_tag"
+  $__exec "dockerize run -cidfile $cidfile $envs -d $run_args $docker_image:$docker_image_tag"
 fi

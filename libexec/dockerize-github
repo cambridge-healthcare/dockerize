@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Usage: dockerize github user/repository[:branch] [docker_image]
+# Usage: dockerize github user/repository[:branch]
 #
-# Summary: Build images from github repositories
+# Summary: Build Docker image from GitHub repository
 #
 # Help: A Docker image will be built from repositories that contain a Dockerfile
 #
@@ -23,8 +23,7 @@ fi
 
 git_version="$(git --version | awk '{ print $3 }')"
 git_version_num="${git_version//./}"
-
-if [ "$git_version_num" -lt 1790 ]
+if [[ $git_version_num < 1790 ]]
 then
   echo "git v1.7.9.0 or newer required"
   exit 1
@@ -82,7 +81,7 @@ github_repo="${github_repo_name_and_branch[0]}"
 github_repo_branch="${github_repo_name_and_branch[1]:-master}"
 shift
 
-docker_image="${1:-${github_repo/*\//}}"
+docker_image="${github_repo/*\//}"
 cloned_repository="$DOCKER_GITHUB_REPOS/$docker_image"
 
 if [ ! -e "$cloned_repository" ]
