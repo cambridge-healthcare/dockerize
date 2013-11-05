@@ -23,8 +23,7 @@ fi
 
 git_version="$(git --version | awk '{ print $3 }')"
 git_version_num="${git_version//./}"
-
-if [ "$git_version_num" -lt 1790 ]
+if [[ $git_version_num < 1790 ]]
 then
   echo "git v1.7.9.0 or newer required"
   exit 1
