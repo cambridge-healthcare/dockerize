@@ -30,6 +30,14 @@ then
   exit 1
 fi
 
+echo "Check whether any of the user's private keys have access to github"
+ssh -nA git@github.com > /dev/null
+if [ $? -eq 1 ]
+then
+  ssh_agent_forwarding="1"
+  echo "Skipping github credentials. Using ssh agent instead."
+fi
+
 # Setting up github credentials caching
 # There are 2 requirements for this:
 #   1. git >= 1.7.9
@@ -39,7 +47,8 @@ fi
 #   * https://www.kernel.org/pub/software/scm/git/docs/git-credential-store.html
 #   * https://help.github.com/articles/set-up-git
 #
-if [[ ! -e "$HOME/.git-credentials" && ! -e "$HOME/.no_prompting_for_git_credentials" ]]
+
+if [[ -z $ssh_agent_forwarding && ! -e "$HOME/.git-credentials" && ! -e "$HOME/.no_prompting_for_git_credentials" ]]
 then
   echo "Should git manage github credentials?"
   github_credentials_options=(
@@ -87,7 +96,12 @@ cloned_repository="$DOCKER_GITHUB_REPOS/$docker_image"
 
 if [ ! -e "$cloned_repository" ]
 then
-  $__exec "git clone https://github.com/${github_repo}.git $cloned_repository"
+  if [ -z "$ssh_agent_forwarding" ]
+  then
+    $__exec "git clone https://github.com/${github_repo}.git $cloned_repository"
+  else
+    $__exec "git clone git@github.com:${github_repo}.git $cloned_repository"
+  fi
   $__exec "cd $cloned_repository"
 else
   $__exec "cd $cloned_repository && git fetch"
